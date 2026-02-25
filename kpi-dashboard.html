@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>E-Commerce KPI Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #111118;
+    --surface2: #1a1a24;
+    --border: #2a2a3a;
+    --accent: #00ff88;
+    --accent2: #ff3366;
+    --accent3: #ffcc00;
+    --text: #e8e8f0;
+    --muted: #6060808;
+    --muted: rgba(200,200,220,0.45);
+    --red: #ff3366;
+    --green: #00ff88;
+    --yellow: #ffcc00;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    padding: 32px 24px 64px;
+    background-image: 
+      radial-gradient(ellipse 60% 40% at 80% 10%, rgba(0,255,136,0.04) 0%, transparent 60%),
+      radial-gradient(ellipse 40% 30% at 10% 90%, rgba(255,51,102,0.04) 0%, transparent 60%);
+  }
+
+  header {
+    max-width: 1200px;
+    margin: 0 auto 40px;
+    display: flex;
+    align-items: baseline;
+    gap: 20px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 20px;
+  }
+
+  header h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2.8rem;
+    letter-spacing: 0.05em;
+    color: var(--text);
+    line-height: 1;
+  }
+
+  header span {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--accent);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    border: 1px solid var(--accent);
+    padding: 3px 8px;
+    border-radius: 2px;
+  }
+
+  .grid {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 360px 1fr;
+    gap: 24px;
+    align-items: start;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 24px;
+  }
+
+  .card-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .card-title::before {
+    content: '';
+    display: block;
+    width: 8px;
+    height: 8px;
+    background: var(--accent);
+    border-radius: 50%;
+  }
+
+  /* INPUT SECTION */
+  .input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .input-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+  }
+
+  .input-row:last-child { border-bottom: none; }
+
+  .input-label {
+    font-size: 0.82rem;
+    color: var(--muted);
+    font-weight: 400;
+  }
+
+  .input-field {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.9rem;
+    padding: 6px 10px;
+    border-radius: 4px;
+    width: 110px;
+    text-align: right;
+    transition: border-color 0.15s;
+    outline: none;
+  }
+
+  .input-field:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(0,255,136,0.1);
+  }
+
+  /* RIGHT COLUMN */
+  .right-col {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  /* BERECHNUNGEN */
+  .calc-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .calc-item {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 16px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .calc-item.highlight {
+    border-color: rgba(0,255,136,0.3);
+  }
+
+  .calc-item.danger {
+    border-color: rgba(255,51,102,0.3);
+  }
+
+  .calc-item.warning {
+    border-color: rgba(255,204,0,0.3);
+  }
+
+  .calc-label {
+    font-size: 0.7rem;
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  .calc-value {
+    font-family: 'DM Mono', monospace;
+    font-size: 1.5rem;
+    font-weight: 500;
+    color: var(--text);
+    line-height: 1;
+  }
+
+  .calc-value.positive { color: var(--green); }
+  .calc-value.negative { color: var(--red); }
+  .calc-value.neutral { color: var(--yellow); }
+
+  .calc-formula {
+    font-size: 0.62rem;
+    color: var(--muted);
+    margin-top: 6px;
+    font-family: 'DM Mono', monospace;
+    opacity: 0.6;
+  }
+
+  /* KPI BOX */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+
+  .kpi-tile {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px;
+    text-align: center;
+  }
+
+  .kpi-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.15em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .kpi-val {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.8rem;
+    color: var(--text);
+    line-height: 1;
+  }
+
+  /* STATUS BOX */
+  .status-box {
+    padding: 16px 20px;
+    border-radius: 6px;
+    border: 1px solid;
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+  }
+
+  .status-box.ok {
+    background: rgba(0,255,136,0.05);
+    border-color: rgba(0,255,136,0.3);
+  }
+
+  .status-box.bad {
+    background: rgba(255,51,102,0.05);
+    border-color: rgba(255,51,102,0.3);
+  }
+
+  .status-icon {
+    font-size: 1.4rem;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+
+  .status-text h3 {
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+
+  .status-text p {
+    font-size: 0.78rem;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  /* SKALIERUNG */
+  .scale-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+
+  .scale-item {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px;
+  }
+
+  .scale-label {
+    font-size: 0.65rem;
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .scale-val {
+    font-family: 'DM Mono', monospace;
+    font-size: 1.1rem;
+    color: var(--text);
+  }
+
+  /* OPTIMIERUNG */
+  .opt-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .opt-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    background: var(--surface2);
+    border-radius: 5px;
+    border: 1px solid var(--border);
+    font-size: 0.82rem;
+  }
+
+  .opt-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.2rem;
+    color: var(--accent2);
+    width: 20px;
+    flex-shrink: 0;
+  }
+
+  .opt-text { color: var(--text); }
+
+  /* FULL WIDTH */
+  .full-width {
+    grid-column: 1 / -1;
+  }
+
+  /* Responsive */
+  @media (max-width: 900px) {
+    .grid { grid-template-columns: 1fr; }
+    .calc-grid { grid-template-columns: repeat(2, 1fr); }
+    .kpi-grid { grid-template-columns: repeat(3, 1fr); }
+    .scale-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  .section-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.58rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 10px;
+    padding: 0 2px;
+  }
+
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 4px 0 16px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>KPI Dashboard</h1>
+  <span>E-Commerce Performance</span>
+</header>
+
+<div class="grid">
+
+  <!-- INPUT PANEL -->
+  <div class="card">
+    <div class="card-title">01 — Input-Bereich</div>
+    <div class="input-group">
+
+      <div class="section-label">Werbebudget & Traffic</div>
+      <div class="input-row">
+        <span class="input-label">Werbebudget (€)</span>
+        <input class="input-field" id="budget" type="number" value="1000" step="50">
+      </div>
+      <div class="input-row">
+        <span class="input-label">CPM (€)</span>
+        <input class="input-field" id="cpm" type="number" value="12" step="0.5">
+      </div>
+      <div class="input-row">
+        <span class="input-label">CTR (%)</span>
+        <input class="input-field" id="ctr" type="number" value="2.5" step="0.1">
+      </div>
+      <div class="input-row">
+        <span class="input-label">CPC (€)</span>
+        <input class="input-field" id="cpc" type="number" value="0.48" step="0.01">
+      </div>
+      <div class="input-row">
+        <span class="input-label">Sessions</span>
+        <input class="input-field" id="sessions" type="number" value="2083" step="10">
+      </div>
+
+      <div class="divider"></div>
+      <div class="section-label">Conversion & Umsatz</div>
+      <div class="input-row">
+        <span class="input-label">CVR (%)</span>
+        <input class="input-field" id="cvr" type="number" value="2.8" step="0.1">
+      </div>
+      <div class="input-row">
+        <span class="input-label">AOV (€)</span>
+        <input class="input-field" id="aov" type="number" value="65" step="1">
+      </div>
+
+      <div class="divider"></div>
+      <div class="section-label">Kosten</div>
+      <div class="input-row">
+        <span class="input-label">Produktkosten (€)</span>
+        <input class="input-field" id="cogs" type="number" value="22" step="1">
+      </div>
+      <div class="input-row">
+        <span class="input-label">Versand (€)</span>
+        <input class="input-field" id="shipping" type="number" value="5" step="0.5">
+      </div>
+      <div class="input-row">
+        <span class="input-label">Payment Fees (€)</span>
+        <input class="input-field" id="fees" type="number" value="2" step="0.1">
+      </div>
+
+    </div>
+  </div>
+
+  <!-- RIGHT COLUMN -->
+  <div class="right-col">
+
+    <!-- BERECHNUNGEN -->
+    <div class="card">
+      <div class="card-title">02 — Automatische Berechnungen</div>
+      <div class="calc-grid">
+        <div class="calc-item">
+          <div class="calc-label">Klicks</div>
+          <div class="calc-value" id="out-clicks">—</div>
+          <div class="calc-formula">Budget ÷ CPC</div>
+        </div>
+        <div class="calc-item">
+          <div class="calc-label">Bestellungen</div>
+          <div class="calc-value" id="out-orders">—</div>
+          <div class="calc-formula">Sessions × CVR</div>
+        </div>
+        <div class="calc-item">
+          <div class="calc-label">Umsatz</div>
+          <div class="calc-value" id="out-revenue">—</div>
+          <div class="calc-formula">Bestellungen × AOV</div>
+        </div>
+        <div class="calc-item">
+          <div class="calc-label">Variable Kosten</div>
+          <div class="calc-value neutral" id="out-varcosts">—</div>
+          <div class="calc-formula">Bestellungen × (Produkt + Versand + Fees)</div>
+        </div>
+        <div class="calc-item highlight">
+          <div class="calc-label">Marge</div>
+          <div class="calc-value" id="out-margin">—</div>
+          <div class="calc-formula">(AOV − var. Kosten/Bestell.) ÷ AOV</div>
+        </div>
+        <div class="calc-item highlight">
+          <div class="calc-label">ROAS</div>
+          <div class="calc-value" id="out-roas">—</div>
+          <div class="calc-formula">Umsatz ÷ Werbekosten</div>
+        </div>
+        <div class="calc-item warning">
+          <div class="calc-label">Break-Even ROAS</div>
+          <div class="calc-value neutral" id="out-be-roas">—</div>
+          <div class="calc-formula">1 ÷ Marge</div>
+        </div>
+        <div class="calc-item danger">
+          <div class="calc-label">Gewinn</div>
+          <div class="calc-value" id="out-profit">—</div>
+          <div class="calc-formula">Umsatz − Budget − Variable Kosten</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STATUS -->
+    <div class="status-box ok" id="status-box">
+      <div class="status-icon" id="status-icon">✅</div>
+      <div class="status-text">
+        <h3 id="status-title">Profitabel</h3>
+        <p id="status-desc">Dein ROAS liegt über dem Break-Even. Du kannst vorsichtig skalieren.</p>
+      </div>
+    </div>
+
+    <!-- KPI BOX -->
+    <div class="card">
+      <div class="card-title">03 — Strategische KPI-Box</div>
+      <div class="kpi-grid">
+        <div class="kpi-tile">
+          <div class="kpi-label">CPM</div>
+          <div class="kpi-val" id="kpi-cpm">—</div>
+        </div>
+        <div class="kpi-tile">
+          <div class="kpi-label">CTR</div>
+          <div class="kpi-val" id="kpi-ctr">—</div>
+        </div>
+        <div class="kpi-tile">
+          <div class="kpi-label">CVR</div>
+          <div class="kpi-val" id="kpi-cvr">—</div>
+        </div>
+        <div class="kpi-tile">
+          <div class="kpi-label">AOV</div>
+          <div class="kpi-val" id="kpi-aov">—</div>
+        </div>
+        <div class="kpi-tile">
+          <div class="kpi-label">ROAS</div>
+          <div class="kpi-val" id="kpi-roas">—</div>
+        </div>
+        <div class="kpi-tile">
+          <div class="kpi-label">Gewinn</div>
+          <div class="kpi-val" id="kpi-profit">—</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- SKALIERUNG - FULL WIDTH -->
+  <div class="card full-width">
+    <div class="card-title">04 — Skalierungs-Dashboard</div>
+    <div class="scale-grid">
+      <div class="scale-item">
+        <div class="scale-label">Max. CAC (Break-Even)</div>
+        <div class="scale-val" id="sc-cac">—</div>
+      </div>
+      <div class="scale-item">
+        <div class="scale-label">Contribution Margin %</div>
+        <div class="scale-val" id="sc-cm">—</div>
+      </div>
+      <div class="scale-item">
+        <div class="scale-label">Echte Marge nach Ads</div>
+        <div class="scale-val" id="sc-netmargin">—</div>
+      </div>
+      <div class="scale-item">
+        <div class="scale-label">LTV-Break-Even Annahme (3×)</div>
+        <div class="scale-val" id="sc-ltv">—</div>
+      </div>
+      <div class="scale-item">
+        <div class="scale-label">Kosten pro Bestell. (gesamt)</div>
+        <div class="scale-val" id="sc-cpo">—</div>
+      </div>
+      <div class="scale-item">
+        <div class="scale-label">Profit pro Bestell.</div>
+        <div class="scale-val" id="sc-ppo">—</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- OPTIMIERUNG -->
+  <div class="card full-width" id="opt-section" style="display:none;">
+    <div class="card-title">⚠️ Gewinn negativ — Optimierungsreihenfolge</div>
+    <div class="opt-list">
+      <div class="opt-item"><span class="opt-num">1</span><span class="opt-text">AOV erhöhen — Upsells, Bundles, höhere Preispunkte testen</span></div>
+      <div class="opt-item"><span class="opt-num">2</span><span class="opt-text">Marge verbessern — Produktkosten senken, Versandoptimierung</span></div>
+      <div class="opt-item"><span class="opt-num">3</span><span class="opt-text">CVR optimieren — Landingpage, Checkout, Vertrauen aufbauen</span></div>
+      <div class="opt-item"><span class="opt-num">4</span><span class="opt-text">Creative verbessern — CTR und CPM verbessern, neue Hooks testen</span></div>
+      <div class="opt-item" style="opacity:0.5;"><span class="opt-num">✗</span><span class="opt-text">NICHT: Budget erhöhen — erst bei positivem Gewinn skalieren</span></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const ids = ['budget','cpm','ctr','cpc','sessions','cvr','aov','cogs','shipping','fees'];
+  ids.forEach(id => document.getElementById(id).addEventListener('input', calculate));
+
+  function fmt(val, digits=0, prefix='') {
+    if (isNaN(val) || !isFinite(val)) return '—';
+    return prefix + val.toLocaleString('de-DE', {minimumFractionDigits: digits, maximumFractionDigits: digits});
+  }
+
+  function fmtEur(val, digits=2) {
+    return fmt(val, digits) + ' €';
+  }
+
+  function calculate() {
+    const budget   = parseFloat(document.getElementById('budget').value) || 0;
+    const cpm      = parseFloat(document.getElementById('cpm').value) || 0;
+    const ctr      = parseFloat(document.getElementById('ctr').value) || 0;
+    const cpc      = parseFloat(document.getElementById('cpc').value) || 0.01;
+    const sessions = parseFloat(document.getElementById('sessions').value) || 0;
+    const cvr      = parseFloat(document.getElementById('cvr').value) / 100 || 0;
+    const aov      = parseFloat(document.getElementById('aov').value) || 0;
+    const cogs     = parseFloat(document.getElementById('cogs').value) || 0;
+    const shipping = parseFloat(document.getElementById('shipping').value) || 0;
+    const fees     = parseFloat(document.getElementById('fees').value) || 0;
+
+    const clicks       = budget / cpc;
+    const orders       = sessions * cvr;
+    const revenue      = orders * aov;
+    const varCostUnit  = cogs + shipping + fees;
+    const varCosts     = orders * varCostUnit;
+    const margin       = aov > 0 ? (aov - varCostUnit) / aov : 0;
+    const roas         = budget > 0 ? revenue / budget : 0;
+    const beRoas       = margin > 0 ? 1 / margin : 0;
+    const profit       = revenue - budget - varCosts;
+    const cac          = orders > 0 ? budget / orders : 0;
+    const maxCac       = aov * margin;
+    const cm           = revenue > 0 ? ((revenue - varCosts) / revenue) * 100 : 0;
+    const netMargin    = revenue > 0 ? (profit / revenue) * 100 : 0;
+    const ltv          = aov * 3 * margin;
+    const cpo          = orders > 0 ? (budget + varCosts) / orders : 0;
+    const ppo          = orders > 0 ? profit / orders : 0;
+
+    // Outputs
+    set('out-clicks',   fmt(clicks, 0));
+    set('out-orders',   fmt(orders, 1));
+    set('out-revenue',  fmtEur(revenue, 2));
+    set('out-varcosts', fmtEur(varCosts, 2));
+    set('out-margin',   fmt(margin * 100, 1) + '%');
+    set('out-roas',     fmt(roas, 2) + 'x');
+    set('out-be-roas',  fmt(beRoas, 2) + 'x');
+
+    const profitEl = document.getElementById('out-profit');
+    profitEl.textContent = fmtEur(profit, 2);
+    profitEl.className = 'calc-value ' + (profit >= 0 ? 'positive' : 'negative');
+
+    const roasEl = document.getElementById('out-roas');
+    roasEl.className = 'calc-value ' + (roas >= beRoas ? 'positive' : 'negative');
+
+    const marginEl = document.getElementById('out-margin');
+    marginEl.className = 'calc-value ' + (margin > 0 ? '' : 'negative');
+
+    // KPI Box
+    set('kpi-cpm',  fmt(cpm, 2) + '€');
+    set('kpi-ctr',  fmt(ctr, 1) + '%');
+    set('kpi-cvr',  fmt(cvr * 100, 1) + '%');
+    set('kpi-aov',  fmt(aov, 0) + '€');
+    set('kpi-roas', fmt(roas, 2) + 'x');
+    const kpiProfit = document.getElementById('kpi-profit');
+    kpiProfit.textContent = fmt(profit, 0) + '€';
+    kpiProfit.style.color = profit >= 0 ? 'var(--green)' : 'var(--red)';
+
+    // Scaling
+    set('sc-cac',       fmtEur(maxCac, 2));
+    set('sc-cm',        fmt(cm, 1) + '%');
+    set('sc-netmargin', fmt(netMargin, 1) + '%');
+    set('sc-ltv',       fmtEur(ltv, 2));
+    set('sc-cpo',       fmtEur(cpo, 2));
+    set('sc-ppo',       fmtEur(ppo, 2));
+
+    // Status
+    const statusBox = document.getElementById('status-box');
+    const statusIcon = document.getElementById('status-icon');
+    const statusTitle = document.getElementById('status-title');
+    const statusDesc = document.getElementById('status-desc');
+    const optSection = document.getElementById('opt-section');
+
+    if (profit >= 0 && roas >= beRoas) {
+      statusBox.className = 'status-box ok';
+      statusIcon.textContent = '✅';
+      statusTitle.textContent = 'Profitabel';
+      statusDesc.textContent = `ROAS ${fmt(roas, 2)}x liegt über Break-Even ${fmt(beRoas, 2)}x. Gewinn: ${fmtEur(profit, 2)}. Du kannst skalieren.`;
+      optSection.style.display = 'none';
+    } else {
+      statusBox.className = 'status-box bad';
+      statusIcon.textContent = '🔴';
+      statusTitle.textContent = 'Nicht profitabel';
+      statusDesc.textContent = `Gewinn: ${fmtEur(profit, 2)}. ROAS ${fmt(roas, 2)}x — Break-Even bei ${fmt(beRoas, 2)}x. Optimiere in der angegebenen Reihenfolge.`;
+      optSection.style.display = 'block';
+    }
+  }
+
+  function set(id, val) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = val;
+  }
+
+  calculate();
+</script>
+</body>
+</html>
